@@ -44,13 +44,6 @@
   .free{display:inline-block;margin-top:10px;background:var(--brand-soft);color:var(--brand-dark);
         padding:4px 12px;border-radius:999px;font-size:.92rem;font-weight:600}
   .alt{display:block;text-align:center;margin-top:10px;font-size:.92rem;color:var(--muted)}
-  .help{display:none;margin-top:16px;background:#FFF8E6;border:1px solid #F3DFA6;border-radius:14px;
-        padding:14px 16px;font-size:.95rem}
-  .help.show{display:block}
-  .help b{display:block;margin-bottom:4px}
-  .help ol{margin:6px 0 10px;padding-inline-start:22px}
-  .copy{font:inherit;font-size:.9rem;background:#fff;border:1px solid var(--line);border-radius:10px;
-        padding:8px 12px;cursor:pointer;color:var(--ink)}
   .note{display:none;margin-top:14px;background:var(--brand-soft);border-radius:12px;padding:10px 14px;
         font-size:.92rem;color:var(--brand-dark)}
   .note.show{display:block}
@@ -113,29 +106,6 @@
       <span data-lang="en">Markavi is currently available for Android only.</span>
     </div>
 
-    <div class="help" id="inAppHelp">
-      <div data-lang="ar">
-        <b>تفتح الصفحة من داخل Instagram؟</b>
-        إن لم يفتح متجر Play بعد الضغط على الزر:
-        <ol>
-          <li>اضغط على النقاط الثلاث <b style="display:inline">⋮</b> أعلى الشاشة</li>
-          <li>اختر «فتح في Chrome» أو «فتح في المتصفح»</li>
-          <li>اضغط زر «حمّل من Google Play» مرة أخرى</li>
-        </ol>
-      </div>
-      <div data-lang="en">
-        <b>Opened inside Instagram?</b>
-        If the Play Store doesn't open after tapping the button:
-        <ol>
-          <li>Tap the three dots <b style="display:inline">⋮</b> at the top</li>
-          <li>Choose “Open in Chrome” or “Open in browser”</li>
-          <li>Tap “Get it on Google Play” again</li>
-        </ol>
-      </div>
-      <button class="copy" id="copyBtn" type="button">
-        <span data-lang="ar">نسخ رابط التطبيق</span><span data-lang="en">Copy app link</span>
-      </button>
-    </div>
   </header>
 
   <section>
@@ -231,16 +201,12 @@
     '#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=' +
     encodeURIComponent(webUrl) + ';end';
 
-  var help = document.getElementById('inAppHelp');
-  function showHelp() { help.classList.add('show'); }
-
   document.querySelectorAll('.js-play, .js-play-web').forEach(function (a) { a.href = webUrl; });
 
   if (isIOS) document.getElementById('iosNote').classList.add('show');
-  if (isAndroid && inApp) showHelp();
 
   // On Android, open the Play Store app directly. In-app browsers (Instagram, Facebook)
-  // often block this, so if the page is still visible shortly after, show the help box.
+  // may block this, so if the page is still visible shortly after, open the web page.
   if (isAndroid) {
     document.querySelectorAll('.js-play').forEach(function (a) {
       a.addEventListener('click', function (e) {
@@ -251,33 +217,11 @@
         location.href = inApp ? marketUrl : intentUrl;
         setTimeout(function () {
           document.removeEventListener('visibilitychange', onHide);
-          if (!left && !document.hidden) {
-            showHelp();
-            if (!inApp) location.href = webUrl;
-          }
+          if (!left && !document.hidden) location.href = webUrl;
         }, 1500);
       });
     });
   }
-
-  // Copy link (with a fallback for in-app browsers without clipboard access).
-  document.getElementById('copyBtn').addEventListener('click', function () {
-    var btn = this;
-    var done = function () {
-      var en = document.body.classList.contains('en');
-      btn.textContent = en ? 'Copied ✓' : 'تم النسخ ✓';
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(webUrl).then(done, fallback);
-    } else { fallback(); }
-    function fallback() {
-      var t = document.createElement('textarea');
-      t.value = webUrl; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
-      document.body.appendChild(t); t.select();
-      try { document.execCommand('copy'); done(); } catch (e) { prompt('', webUrl); }
-      document.body.removeChild(t);
-    }
-  });
 
   // Language: ?lang=en, saved choice, otherwise Arabic.
   var btn = document.getElementById('langBtn');
